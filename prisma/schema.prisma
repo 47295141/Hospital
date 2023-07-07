@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Roles{
+  USER
+  ADMIN
+}
+
+model Auth{
+  id String @id @default(uuid()) @db.Uuid
+  password String @db.VarChar(50) 
+  email String @db.VarChar(60)
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+  currentRol Roles @default(value:USER)  
+  user User?
+}
+
+model User{
+  id String @id @default(uuid()) @db.Uuid
+  name String @db.VarChar(60)
+  lastName String @db.VarChar(60) @map("last_name")
+  phoneNumber String @db.VarChar(8) @unique @map("phone_number")
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+  authId      String   @unique @map("auth_id") @db.Uuid
+  auth        Auth     @relation(fields: [authId], references: [id])
+  timeTable TimeTable[]
+  prescription Prescription[]
+}
+model Appointment{
+  id String @id @default(uuid()) @db.Uuid
+  nameOfPatient String @db.VarChar(60)@map("name_of_patient")
+  nameOfThedoctor String @db.VarChar(60)@map("name_of_the_doctor")
+  dpiOfpacient String @db.VarChar(8)@map("dpi_of_pacient")
+  healthInsurance String @db.VarChar(100)@map("health_insurance")
+  birthDate String @db.VarChar(6)@map("birth_date")
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+  timeTable TimeTable [] 
+}
+model TimeTable{
+  id String @id @default(uuid()) @db.Uuid
+  day String @db.VarChar(10)
+  month String @db.VarChar(10)
+  year String @db.VarChar(10)
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  appointmentId String @map("appointment_id") @db.Uuid
+  appointment Appointment @relation(fields: [appointmentId], references: [id] )
+  @@map("time_table")
+}  
+model Prescription {
+  id String @id @default(uuid()) @db.Uuid
+  nameOfPatient String @db.VarChar(60)@map("name_of_pacient")
+  nameOfTheDoctor String @db.VarChar(60)@map("name_of_the_doctor")
+  instructionsForUse String @db.VarChar(100)@map("instructions_for_use")
+  diagnosis String @db.VarChar(70)
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+  userId String @map("user_id") @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  measure Measure[] 
+}
+model  Medicine{
+  id String @id @default(uuid()) @db.Uuid
+  nameOfTheMedication String @db.VarChar(50) @map("name_of_the_medication")
+  amount Decimal @db.Decimal(5,2)
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+  measure Measure []
+}
+model Measure {
+  id String @id @default(uuid()) @db.Uuid
+  measures String @db.VarChar(60)
+  createAt DateTime @default(now()) @map("create_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("update_at")
+  active Boolean @default(true)
+  prescriptionId String @map("prescription_id") @db.Uuid
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+  medicineId String @map("medicine_id") @db.Uuid
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+}
